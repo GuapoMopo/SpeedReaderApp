@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(Nav2App());
+  runApp(MainScreen());
 }
 
-class Nav2App extends StatelessWidget {
+class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -114,12 +114,216 @@ class BeginReadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: AppBar(
+          title: const Text("Begin Reading"),
+          backgroundColor: Colors.red[900],
+        ),
+        body: Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.red[900])),
+              child: Text('Continue Progress'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) {
+                    return ContinueProgress();
+                  }),
+                );
+              },
+            ),
+            ElevatedButton(
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.red[900])),
+              child: Text('Saved Text'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) {
+                    return SavedText();
+                  }),
+                );
+              },
+            ),
+          ],
+        )));
+  }
+}
+
+class BeginReadingScreenReal extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       appBar: AppBar(
         title: const Text("Begin Reading"),
         backgroundColor: Colors.red[900],
       ),
       body: Center(child: UpdateText()),
     );
+  }
+}
+
+class SavedText extends StatefulWidget {
+  @override
+  _SavedText createState() => _SavedText();
+}
+
+class _SavedText extends State {
+  final List<String> savedTexts = <String>[
+    'Page 1',
+    'Page 2',
+    'Page 3',
+    'Page 4',
+    'Page 5',
+    'Page 6',
+    'Page 7',
+    'Page 8',
+    'Page 9',
+    'Page 10',
+    'Page 11',
+    'Page 12'
+  ];
+  Future selected;
+  TextEditingController nameController = TextEditingController();
+
+  void addItemToList() {
+    setState(() {
+      savedTexts.add(nameController.text);
+    });
+  }
+
+  void deleteItemFromList(String value) {
+    setState(() {
+      savedTexts.remove(value);
+    });
+  }
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Saved Text"),
+      ),
+      body: Column(
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'Text Name'),
+            ),
+          ),
+          ElevatedButton(
+            child: Text('Add'),
+            onPressed: () {
+              addItemToList();
+            },
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: savedTexts.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Container(
+                  height: 50,
+                  margin: EdgeInsets.all(2),
+                  child: Center(
+                    child: ListTile(
+                      title: Text('${savedTexts[index]}'),
+
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) {
+                          return UpdateText(); //right now they all go home screen so but
+                          //they should go to read screen with the proper text located at savedText[index]
+                        }),
+                      ),
+                      onLongPress: () => {print(selected)}, //i want to
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class ContinueProgress extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Progress"),
+        ),
+        body: ListView(children: <Widget>[
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 1'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) {
+                return HomeScreen();
+              }),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 2'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 3'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 4'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 5'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 6'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 7'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 8'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 9'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 10'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 11'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 12'),
+          ),
+          ListTile(
+            leading: Icon(Icons.backup_outlined),
+            title: Text('Level 13'),
+          ),
+        ]));
   }
 }
 
@@ -143,23 +347,6 @@ class Progress extends StatelessWidget {
 }
 
 class ImportCustomText extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: ElevatedButton(
-          child: Text('Pop2!'),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class SavedText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,18 +405,35 @@ class UpdateTextState extends State {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.grey,
+        appBar: AppBar(
+          title: Text("Saved Text"),
+          backgroundColor: Colors.red[900],
+        ),
         body: Center(
+            widthFactor: 1.0,
+            heightFactor: 1.0,
             child: Column(children: <Widget>[
-      Container(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
-          child: Text('$blank', style: TextStyle(fontSize: 21))),
-      ElevatedButton(
-          style: ButtonStyle(
-              backgroundColor:
-                  MaterialStateProperty.all<Color>(Colors.red[900])),
-          onPressed: () =>
-              changeText(), //will probably have to pass in wpm specified here
-          child: const Text("READ")),
-    ])));
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: 250.0,
+                color: Colors.red[900],
+                margin: const EdgeInsets.fromLTRB(0, 0, 0, 50),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$blank',
+                    style: TextStyle(fontSize: 70),
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.red[900])),
+                  onPressed: () =>
+                      changeText(), //will probably have to pass in wpm specified here
+                  child: const Text("READ")),
+            ])));
   }
 }
