@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:async';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+// Obtain a list of the available cameras on the device.
+  //final cameras = await availableCameras();
+  //final firstCamera = cameras.first;
   runApp(MainScreen());
 }
 
@@ -189,7 +197,7 @@ class _SavedText extends State {
     'Page 11',
     'Page 12'
   ];
-  Future selected;
+
   TextEditingController nameController = TextEditingController();
 
   void addItemToList() {
@@ -202,6 +210,20 @@ class _SavedText extends State {
     setState(() {
       savedTexts.remove(value);
     });
+  }
+
+  Future<void> openCamera() async {
+    print("Camera");
+    var cam = await ImagePicker.pickImage(
+      source: ImageSource.camera,
+    );
+  }
+
+  void openGallery() async {
+    print("Gallery");
+    var gallery = await ImagePicker.pickImage(
+      source: ImageSource.gallery,
+    );
   }
 
   Future<void> _showMenu(int pos) async {
@@ -243,20 +265,6 @@ class _SavedText extends State {
       ),
       body: Column(
         children: <Widget>[
-          // Padding(
-          //   padding: EdgeInsets.all(20),
-          //  child: TextField(
-          //     controller: nameController,
-          //     decoration: InputDecoration(
-          //         border: OutlineInputBorder(), labelText: 'Text Name'),
-          //   ),
-          // ),
-          //  ElevatedButton(
-          //    child: Text('Add'),
-          //    onPressed: () {
-          //     addItemToList();
-          //   },
-          //   ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
@@ -284,6 +292,121 @@ class _SavedText extends State {
           )
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: <Widget>[
+                      GestureDetector(
+                        child: Text('Take a picture'),
+                        onTap: openCamera,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(8.0),
+                      ),
+                      GestureDetector(
+                        child: Text('Select from gallery'),
+                        onTap: openGallery,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+      ),
+    );
+  }
+}
+
+class TakePictureScreen extends StatefulWidget {
+  //final CameraDescription camera;
+
+  //const TakePictureScreen({
+  // Key key,
+  //  @required this.camera,
+  // }) : super(key: key);
+
+  @override
+  TakePictureScreenState createState() => TakePictureScreenState();
+}
+
+class TakePictureScreenState extends State<TakePictureScreen> {
+  CameraController _controller;
+  Future<void> _intializeControllerFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    print("waiting for cameras");
+    final cameras = await availableCameras();
+    final firstCamera = cameras.first;
+    _controller = CameraController(firstCamera, ResolutionPreset.medium);
+    _intializeControllerFuture = _controller.initialize();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print("BUiLD?");
+    return Scaffold(
+      appBar: AppBar(title: Text('Take a Picture')),
+      body: FutureBuilder<void>(
+        future: _intializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return CameraPreview(_controller);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.camera_alt),
+        onPressed: () async {
+          try {
+            await _intializeControllerFuture;
+            final image = await _controller.takePicture();
+            print(image?.path);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => DisplayPictureScreen(
+                          imagePath: image?.path,
+                        )));
+          } catch (e) {
+            print(e);
+          }
+        },
+      ),
+    );
+  }
+}
+
+class DisplayPictureScreen extends StatelessWidget {
+  final String imagePath;
+
+  const DisplayPictureScreen({Key key, this.imagePath}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Display the Picture')),
+      // The image is stored as a file on the device. Use the `Image.file`
+      // constructor with the given path to display the image.
+      //body: Image.file(File(imagePath)),
     );
   }
 }
