@@ -191,7 +191,6 @@ class _SavedText extends State {
   ];
   Future selected;
   TextEditingController nameController = TextEditingController();
-  var _selection;
 
   void addItemToList() {
     setState(() {
@@ -205,7 +204,7 @@ class _SavedText extends State {
     });
   }
 
-  Future<void> _showMenu() async {
+  Future<void> _showMenu(int pos) async {
     int selected = await showMenu(
       position: RelativeRect.fromLTRB(100, 100.0, 100.0, 100.0),
       context: context,
@@ -233,7 +232,7 @@ class _SavedText extends State {
     if (selected == 0) {
       print('handle edit');
     } else {
-      print('handle delete');
+      deleteItemFromList(savedTexts[pos]);
     }
   }
 
@@ -244,20 +243,20 @@ class _SavedText extends State {
       ),
       body: Column(
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(), labelText: 'Text Name'),
-            ),
-          ),
-          ElevatedButton(
-            child: Text('Add'),
-            onPressed: () {
-              addItemToList();
-            },
-          ),
+          // Padding(
+          //   padding: EdgeInsets.all(20),
+          //  child: TextField(
+          //     controller: nameController,
+          //     decoration: InputDecoration(
+          //         border: OutlineInputBorder(), labelText: 'Text Name'),
+          //   ),
+          // ),
+          //  ElevatedButton(
+          //    child: Text('Add'),
+          //    onPressed: () {
+          //     addItemToList();
+          //   },
+          //   ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
@@ -276,7 +275,7 @@ class _SavedText extends State {
                           //they should go to read screen with the proper text located at savedText[index]
                         }),
                       ),
-                      onLongPress: () => {_showMenu()},
+                      onLongPress: () => {_showMenu(index)},
                     ),
                   ),
                 );
