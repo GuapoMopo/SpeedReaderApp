@@ -191,6 +191,7 @@ class _SavedText extends State {
   ];
   Future selected;
   TextEditingController nameController = TextEditingController();
+  var _selection;
 
   void addItemToList() {
     setState(() {
@@ -202,6 +203,38 @@ class _SavedText extends State {
     setState(() {
       savedTexts.remove(value);
     });
+  }
+
+  Future<void> _showMenu() async {
+    int selected = await showMenu(
+      position: RelativeRect.fromLTRB(100, 100.0, 100.0, 100.0),
+      context: context,
+      items: [
+        PopupMenuItem(
+          value: 0,
+          child: Row(
+            children: [
+              Icon(Icons.edit),
+              Text("Edit"),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 1,
+          child: Row(
+            children: [
+              Icon(Icons.delete),
+              Text("Delete"),
+            ],
+          ),
+        ),
+      ],
+    );
+    if (selected == 0) {
+      print('handle edit');
+    } else {
+      print('handle delete');
+    }
   }
 
   Widget build(BuildContext context) {
@@ -236,7 +269,6 @@ class _SavedText extends State {
                   child: Center(
                     child: ListTile(
                       title: Text('${savedTexts[index]}'),
-
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) {
@@ -244,7 +276,7 @@ class _SavedText extends State {
                           //they should go to read screen with the proper text located at savedText[index]
                         }),
                       ),
-                      onLongPress: () => {print(selected)}, //i want to
+                      onLongPress: () => {_showMenu()},
                     ),
                   ),
                 );
