@@ -1,6 +1,19 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:async';
+import 'package:flutter_mobile_vision/flutter_mobile_vision.dart'; //tried using and it just wasnt that great
+import 'dart:io' as Io;
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+// Obtain a list of the available cameras on the device.
+  //final cameras = await availableCameras();
+  //final firstCamera = cameras.first;
   runApp(MainScreen());
 }
 
@@ -189,7 +202,7 @@ class _SavedText extends State {
     'Page 11',
     'Page 12'
   ];
-  Future selected;
+
   TextEditingController nameController = TextEditingController();
 
   void addItemToList() {
@@ -202,6 +215,48 @@ class _SavedText extends State {
     setState(() {
       savedTexts.remove(value);
     });
+  }
+
+  String parsedText = '';
+
+  Future<void> openCamera() async {
+    print("Camera");
+    //File _image;
+    final picker = ImagePicker();
+    PickedFile image = await picker.getImage(
+        source: ImageSource.camera, maxWidth: 670, maxHeight: 970);
+    final Io.File imageFile = Io.File(image.path);
+    var bytes = Io.File(imageFile.path.toString()).readAsBytesSync();
+    String img64 = base64Encode(bytes);
+    var url = Uri.parse('https://api.ocr.space/parse/image');
+    var payload = {"base64Image": "data:image/jpg;base64,${img64.toString()}"};
+    var header = {"apikey": "dddeb6dd7b88957"};
+    var post = await http.post(url = url, body: payload, headers: header);
+    var result = jsonDecode(post.body);
+    parsedText = result['ParsedResults'][0]['ParsedText'];
+    print(parsedText);
+  }
+
+  void openGallery() async {
+    //instead of using an api call website, tesseractOcr looks good too
+    print("Gallery");
+    final picker = ImagePicker();
+
+    //var gallery = await ImagePicker.getImage( /// old api
+    //  source: ImageSource.gallery,
+    //);
+    PickedFile image = await ImagePicker().getImage(
+        source: ImageSource.gallery, maxWidth: 670, maxHeight: 970); //new api
+    final Io.File imageFile = Io.File(image.path);
+    var bytes = Io.File(imageFile.path.toString()).readAsBytesSync();
+    String img64 = base64Encode(bytes);
+    var url = Uri.parse('https://api.ocr.space/parse/image');
+    var payload = {"base64Image": "data:image/jpg;base64,${img64.toString()}"};
+    var header = {"apikey": "dddeb6dd7b88957"};
+    var post = await http.post(url = url, body: payload, headers: header);
+    var result = jsonDecode(post.body);
+    parsedText = result['ParsedResults'][0]['ParsedText'];
+    print(parsedText);
   }
 
   Future<void> _showMenu(int pos) async {
@@ -236,6 +291,7 @@ class _SavedText extends State {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -243,20 +299,6 @@ class _SavedText extends State {
       ),
       body: Column(
         children: <Widget>[
-          // Padding(
-          //   padding: EdgeInsets.all(20),
-          //  child: TextField(
-          //     controller: nameController,
-          //     decoration: InputDecoration(
-          //         border: OutlineInputBorder(), labelText: 'Text Name'),
-          //   ),
-          // ),
-          //  ElevatedButton(
-          //    child: Text('Add'),
-          //    onPressed: () {
-          //     addItemToList();
-          //   },
-          //   ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
@@ -283,6 +325,32 @@ class _SavedText extends State {
             ),
           )
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: <Widget>[
+                      GestureDetector(
+                        child: Text('Take a picture'),
+                        onTap: openCamera,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(8.0),
+                      ),
+                      GestureDetector(
+                        child: Text('Select from gallery'),
+                        onTap: openGallery,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
       ),
     );
   }
