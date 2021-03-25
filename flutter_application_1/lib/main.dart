@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:async';
+import 'package:flutter_mobile_vision/flutter_mobile_vision.dart'; //tried using and it just wasnt that great
+import 'dart:io' as Io;
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -212,26 +217,46 @@ class _SavedText extends State {
     });
   }
 
+  String parsedText = '';
+
   Future<void> openCamera() async {
     print("Camera");
     //File _image;
     final picker = ImagePicker();
-    try {
-      final pickedFile = await picker.getImage(source: ImageSource.camera);
-      PickedFile image = await picker.getImage(source: ImageSource.camera);
-    } catch (e) {
-      print(e);
-    }
+    PickedFile image = await picker.getImage(
+        source: ImageSource.camera, maxWidth: 670, maxHeight: 970);
+    final Io.File imageFile = Io.File(image.path);
+    var bytes = Io.File(imageFile.path.toString()).readAsBytesSync();
+    String img64 = base64Encode(bytes);
+    var url = Uri.parse('https://api.ocr.space/parse/image');
+    var payload = {"base64Image": "data:image/jpg;base64,${img64.toString()}"};
+    var header = {"apikey": "dddeb6dd7b88957"};
+    var post = await http.post(url = url, body: payload, headers: header);
+    var result = jsonDecode(post.body);
+    parsedText = result['ParsedResults'][0]['ParsedText'];
+    print(parsedText);
   }
 
   void openGallery() async {
+    //instead of using an api call website, tesseractOcr looks good too
     print("Gallery");
     final picker = ImagePicker();
+
     //var gallery = await ImagePicker.getImage( /// old api
     //  source: ImageSource.gallery,
     //);
-    PickedFile image =
-        await picker.getImage(source: ImageSource.gallery); //new api
+    PickedFile image = await ImagePicker().getImage(
+        source: ImageSource.gallery, maxWidth: 670, maxHeight: 970); //new api
+    final Io.File imageFile = Io.File(image.path);
+    var bytes = Io.File(imageFile.path.toString()).readAsBytesSync();
+    String img64 = base64Encode(bytes);
+    var url = Uri.parse('https://api.ocr.space/parse/image');
+    var payload = {"base64Image": "data:image/jpg;base64,${img64.toString()}"};
+    var header = {"apikey": "dddeb6dd7b88957"};
+    var post = await http.post(url = url, body: payload, headers: header);
+    var result = jsonDecode(post.body);
+    parsedText = result['ParsedResults'][0]['ParsedText'];
+    print(parsedText);
   }
 
   Future<void> _showMenu(int pos) async {
@@ -266,6 +291,7 @@ class _SavedText extends State {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
