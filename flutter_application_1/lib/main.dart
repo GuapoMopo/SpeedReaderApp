@@ -214,16 +214,24 @@ class _SavedText extends State {
 
   Future<void> openCamera() async {
     print("Camera");
-    var cam = await ImagePicker.pickImage(
-      source: ImageSource.camera,
-    );
+    //File _image;
+    final picker = ImagePicker();
+    try {
+      final pickedFile = await picker.getImage(source: ImageSource.camera);
+      PickedFile image = await picker.getImage(source: ImageSource.camera);
+    } catch (e) {
+      print(e);
+    }
   }
 
   void openGallery() async {
     print("Gallery");
-    var gallery = await ImagePicker.pickImage(
-      source: ImageSource.gallery,
-    );
+    final picker = ImagePicker();
+    //var gallery = await ImagePicker.getImage( /// old api
+    //  source: ImageSource.gallery,
+    //);
+    PickedFile image =
+        await picker.getImage(source: ImageSource.gallery); //new api
   }
 
   Future<void> _showMenu(int pos) async {
@@ -318,95 +326,6 @@ class _SavedText extends State {
               );
             }),
       ),
-    );
-  }
-}
-
-class TakePictureScreen extends StatefulWidget {
-  //final CameraDescription camera;
-
-  //const TakePictureScreen({
-  // Key key,
-  //  @required this.camera,
-  // }) : super(key: key);
-
-  @override
-  TakePictureScreenState createState() => TakePictureScreenState();
-}
-
-class TakePictureScreenState extends State<TakePictureScreen> {
-  CameraController _controller;
-  Future<void> _intializeControllerFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeCamera();
-  }
-
-  Future<void> _initializeCamera() async {
-    print("waiting for cameras");
-    final cameras = await availableCameras();
-    final firstCamera = cameras.first;
-    _controller = CameraController(firstCamera, ResolutionPreset.medium);
-    _intializeControllerFuture = _controller.initialize();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    print("BUiLD?");
-    return Scaffold(
-      appBar: AppBar(title: Text('Take a Picture')),
-      body: FutureBuilder<void>(
-        future: _intializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.camera_alt),
-        onPressed: () async {
-          try {
-            await _intializeControllerFuture;
-            final image = await _controller.takePicture();
-            print(image?.path);
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => DisplayPictureScreen(
-                          imagePath: image?.path,
-                        )));
-          } catch (e) {
-            print(e);
-          }
-        },
-      ),
-    );
-  }
-}
-
-class DisplayPictureScreen extends StatelessWidget {
-  final String imagePath;
-
-  const DisplayPictureScreen({Key key, this.imagePath}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Display the Picture')),
-      // The image is stored as a file on the device. Use the `Image.file`
-      // constructor with the given path to display the image.
-      //body: Image.file(File(imagePath)),
     );
   }
 }
