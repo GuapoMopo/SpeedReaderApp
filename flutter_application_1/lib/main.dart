@@ -542,7 +542,7 @@ class UpdateText extends StatefulWidget {
 
 bool yesOrNo = false;
 
-class UpdateTextState extends State {
+class UpdateTextState extends State with SingleTickerProviderStateMixin {
   final int textIndex2;
   UpdateTextState({Key key, @required this.textIndex2});
   String blank = '';
@@ -566,6 +566,28 @@ class UpdateTextState extends State {
       (await new Future.delayed(
           const Duration(milliseconds: 500))); //control the wpm
     }
+  }
+
+  AnimationController controller;
+  bool isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+  }
+
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+  }
+
+  void playPauseChange() {
+    setState(() {
+      isPlaying = !isPlaying;
+      isPlaying ? controller.forward() : controller.reverse();
+    });
   }
 
   @override
@@ -593,13 +615,29 @@ class UpdateTextState extends State {
                   ),
                 ),
               ),
-              ElevatedButton(
+              IconButton(
+                iconSize: 50,
+                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                onPressed: () {
+                  changeText();
+                  playPauseChange();
+                },
+              ),
+              // IconButton(
+              //  iconSize: 50,
+              //  icon: AnimatedIcon(
+              //   icon: AnimatedIcons.play_pause,
+              //    progress: controller,
+              //  ),
+              // onPressed: () => changeText(),
+              // ),
+              /*ElevatedButton(
                   style: ButtonStyle(
                       backgroundColor:
                           MaterialStateProperty.all<Color>(Colors.red[900])),
                   onPressed: () =>
                       changeText(), //will probably have to pass in wpm specified here
-                  child: const Text("READ")),
+                  child: const Text("READ")),*/
             ])));
   }
 }
