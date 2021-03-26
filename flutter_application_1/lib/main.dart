@@ -187,28 +187,20 @@ class SavedText extends StatefulWidget {
   _SavedText createState() => _SavedText();
 }
 
-class _SavedText extends State {
-  final List<String> savedTexts = <String>[
-    'Page 1',
-    'Page 2',
-    'Page 3',
-    'Page 4',
-    'Page 5',
-    'Page 6',
-    'Page 7',
-    'Page 8',
-    'Page 9',
-    'Page 10',
-    'Page 11',
-    'Page 12'
-  ];
+final List<String> savedTexts = <String>["Page 1"];
+final List<String> savedTextParagraphs = <String>[
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+];
 
+class _SavedText extends State {
   TextEditingController nameController = TextEditingController();
 
-  void addItemToList() {
+  void addItemToList(String itemToAdd, String paragraph) {
     setState(() {
-      savedTexts.add(nameController.text);
+      savedTexts.add(itemToAdd);
+      savedTextParagraphs.add(paragraph);
     });
+    print(savedTextParagraphs);
   }
 
   void deleteItemFromList(String value) {
@@ -219,7 +211,7 @@ class _SavedText extends State {
 
   String parsedText = '';
 
-  Future<void> openCamera() async {
+  Future<String> openCamera() async {
     print("Camera");
     //File _image;
     final picker = ImagePicker();
@@ -235,12 +227,12 @@ class _SavedText extends State {
     var result = jsonDecode(post.body);
     parsedText = result['ParsedResults'][0]['ParsedText'];
     print(parsedText);
+    return parsedText;
   }
 
-  void openGallery() async {
+  Future<String> openGallery() async {
     //instead of using an api call website, tesseractOcr looks good too
     print("Gallery");
-    final picker = ImagePicker();
 
     //var gallery = await ImagePicker.getImage( /// old api
     //  source: ImageSource.gallery,
@@ -255,8 +247,9 @@ class _SavedText extends State {
     var header = {"apikey": "dddeb6dd7b88957"};
     var post = await http.post(url = url, body: payload, headers: header);
     var result = jsonDecode(post.body);
-    parsedText = result['ParsedResults'][0]['ParsedText'];
-    print(parsedText);
+    parsedText = await result['ParsedResults'][0]['ParsedText'];
+    //print(parsedText);
+    return parsedText.toString();
   }
 
   Future<void> _showMenu(int pos) async {
@@ -291,6 +284,51 @@ class _SavedText extends State {
     }
   }
 
+  Future<void> _displayTextInputDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Input name'),
+            content: TextField(
+              onChanged: (value) {
+                setState(() {
+                  valueText = value;
+                });
+              },
+              controller: nameController,
+              decoration: InputDecoration(hintText: "Page 1"),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                color: Colors.red,
+                textColor: Colors.white,
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              FlatButton(
+                color: Colors.green,
+                textColor: Colors.white,
+                child: Text("Okay"),
+                onPressed: () async {
+                  codeDialog = valueText;
+                  Navigator.pop(context);
+                  textString = await openGallery();
+                  print(textString);
+                  addItemToList(codeDialog, textString);
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  String codeDialog;
+  String valueText;
+  String textString;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -310,13 +348,18 @@ class _SavedText extends State {
                   child: Center(
                     child: ListTile(
                       title: Text('${savedTexts[index]}'),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) {
-                          return UpdateText(); //right now they all go home screen so but
-                          //they should go to read screen with the proper text located at savedText[index]
-                        }),
-                      ),
+                      onTap: () {
+                        print(index);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) {
+                            return UpdateText(
+                              textIndex: index,
+                            ); //right now they all go home screen so but
+                            //they should go to read screen with the proper text located at savedText[index]
+                          }),
+                        );
+                      },
                       onLongPress: () => {_showMenu(index)},
                     ),
                   ),
@@ -336,15 +379,26 @@ class _SavedText extends State {
                   child: ListBody(
                     children: <Widget>[
                       GestureDetector(
-                        child: Text('Take a picture'),
-                        onTap: openCamera,
-                      ),
+                          child: Text('Take a picture'),
+                          onTap: () async {
+                            Navigator.of(context).pop();
+
+                            var textString = await openCamera();
+                            print(textString);
+                          }),
                       Padding(
                         padding: EdgeInsets.all(8.0),
                       ),
                       GestureDetector(
                         child: Text('Select from gallery'),
-                        onTap: openGallery,
+                        onTap: () async {
+                          Navigator.of(context).pop();
+                          await _displayTextInputDialog(context);
+                          // var textString = await openGallery();
+                          print("Right before");
+                          print(textString);
+                          print(codeDialog);
+                        },
                       ),
                     ],
                   ),
@@ -480,24 +534,37 @@ class Settings extends StatelessWidget {
 }
 
 class UpdateText extends StatefulWidget {
+  final int textIndex;
+  UpdateText({Key key, @required this.textIndex}) : super(key: key);
   //if you spam click, it creates multiple instances and overlaps
-  UpdateTextState createState() => UpdateTextState();
+  UpdateTextState createState() => UpdateTextState(textIndex2: textIndex);
 }
 
+bool yesOrNo = false;
+
 class UpdateTextState extends State {
+  final int textIndex2;
+  UpdateTextState({Key key, @required this.textIndex2});
   String blank = '';
-  String textHolder =
-      "She had come to the conclusion that you could tell a lot about a person by their ears. The way they stuck out and the size of the earlobes could give you wonderful insights into the person. Of course, she couldn't scientifically prove any of this, but that didn't matter to her. Before anything else, she would size up the ears of the person she was talking to.";
+  String textHolder;
 
   changeText() async {
-    var list = textHolder.split(" ");
+    textHolder = savedTextParagraphs[textIndex2];
+    print("*****************************");
+    print(textHolder);
+    textHolder = textHolder.replaceAll("\n", " ");
+    var list = textHolder.split(
+      " ",
+    );
+    print(list);
     for (var item in list) {
+      if (yesOrNo == true) break;
       setState(() {
         blank = item;
       });
       // ignore: unnecessary_statements
       (await new Future.delayed(
-          const Duration(milliseconds: 200))); //control the wpm
+          const Duration(milliseconds: 500))); //control the wpm
     }
   }
 
@@ -522,7 +589,7 @@ class UpdateTextState extends State {
                   alignment: Alignment.center,
                   child: Text(
                     '$blank',
-                    style: TextStyle(fontSize: 70),
+                    style: TextStyle(fontSize: 60),
                   ),
                 ),
               ),
