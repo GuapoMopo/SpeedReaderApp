@@ -550,13 +550,11 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
 
   changeText() async {
     textHolder = savedTextParagraphs[textIndex2];
-    print("*****************************");
     print(textHolder);
     textHolder = textHolder.replaceAll("\n", " ");
     var list = textHolder.split(
       " ",
     );
-    print(list);
     for (var item in list) {
       if (yesOrNo == true) break;
       setState(() {
@@ -566,6 +564,13 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
       (await new Future.delayed(
           const Duration(milliseconds: 500))); //control the wpm
     }
+  }
+
+  changeTextTest(String item) {
+    setState(() {
+      blank = item;
+      // ignore: unnecessary_statements
+    });
   }
 
   AnimationController controller;
@@ -589,6 +594,13 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
       isPlaying ? controller.forward() : controller.reverse();
     });
   }
+
+  bool isChanging = true;
+  bool lockInstance = false;
+  bool firstClick = false;
+  bool rewindSave = false;
+  int savedSpot = 0;
+  var list = [];
 
   @override
   Widget build(BuildContext context) {
@@ -615,14 +627,72 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
                   ),
                 ),
               ),
-              IconButton(
-                iconSize: 50,
-                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                onPressed: () {
-                  changeText();
-                  playPauseChange();
-                },
-              ),
+              Row(
+                  //EmainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    IconButton(
+                      iconSize: 100,
+                      icon: Icon(Icons.fast_rewind_outlined),
+                      onPressed: () async {
+                        rewindSave = true;
+                        print(savedSpot);
+                        if (savedSpot != 0 && savedSpot - 2 > 0) {
+                          print("REWIND");
+                          //rewind word functionality
+                          savedSpot = savedSpot - 2;
+                          await changeTextTest(list[savedSpot]);
+                          print(lockInstance);
+                          isChanging = true;
+                        }
+                        rewindSave = false;
+                      },
+                    ),
+                    IconButton(
+                      iconSize: 100,
+                      icon: Icon(isPlaying
+                          ? Icons.pause_outlined
+                          : Icons.play_arrow_outlined),
+                      onPressed: () async {
+                        var textPara = savedTextParagraphs[textIndex2];
+                        textPara = textPara.replaceAll("\n", " ");
+                        list = textPara.split(
+                          " ",
+                        );
+                        if (firstClick == true) isChanging = false;
+                        //this will lock it so it doesn't create another instance and will reset when it's done displaying
+                        if (lockInstance == false) {
+                          firstClick = true;
+                          print("HERE");
+                          playPauseChange();
+                          print("playpause");
+                          for (var i = savedSpot; i < list.length; i++) {
+                            print("outside");
+                            if (isChanging == true) {
+                              print("inside");
+                              await changeTextTest(list[i]);
+                              // ignore: unnecessary_statements
+                              (await new Future.delayed(
+                                  const Duration(milliseconds: 500)));
+                            } else if (isChanging == false) {
+                              print("isChanging");
+                              print(rewindSave);
+                              if (rewindSave == false) savedSpot = i;
+                              //savedSpot = i;
+                              lockInstance = false;
+                              firstClick = false;
+                              isChanging = true;
+                              rewindSave = false;
+                              break; // if you spam click, then it can't hit the break fast enough and won't pause
+                            }
+                            lockInstance = true;
+                          }
+                          lockInstance = false;
+                          firstClick = false;
+                          playPauseChange();
+                        }
+                      },
+                    ),
+                  ])
               // IconButton(
               //  iconSize: 50,
               //  icon: AnimatedIcon(
