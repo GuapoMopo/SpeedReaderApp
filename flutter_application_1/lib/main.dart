@@ -1,12 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:async';
-import 'package:flutter_mobile_vision/flutter_mobile_vision.dart'; //tried using and it just wasnt that great
+//import 'package:flutter_mobile_vision/flutter_mobile_vision.dart'; //tried using and it just wasnt that great
 import 'dart:io' as Io;
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
+//import 'package:path/path.dart' as p;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -206,6 +207,7 @@ class _SavedText extends State {
   void deleteItemFromList(String value) {
     setState(() {
       savedTexts.remove(value);
+      savedTextParagraphs.remove(value);
     });
   }
 
@@ -547,7 +549,10 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
   UpdateTextState({Key key, @required this.textIndex2});
   String blank = '';
   String textHolder;
+  int actualWPM = 150;
 
+//don't use
+/*
   changeText() async {
     textHolder = savedTextParagraphs[textIndex2];
     print(textHolder);
@@ -562,14 +567,15 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
       });
       // ignore: unnecessary_statements
       (await new Future.delayed(
-          const Duration(milliseconds: 500))); //control the wpm
+          const Duration(seconds: 400))); //control the wpm
+
     }
   }
+  */
 
   changeTextTest(String item) {
     setState(() {
       blank = item;
-      // ignore: unnecessary_statements
     });
   }
 
@@ -600,7 +606,25 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
   bool firstClick = false;
   bool rewindSave = false;
   int savedSpot = 0;
+  int wpm;
   var list = [];
+  var wpmList = <String>[
+    '100 WPM',
+    '150 WPM',
+    '200 WPM',
+    '250 WPM',
+    '300 WPM',
+    '350 WPM',
+    '400 WPM',
+    '450 WPM',
+    '500 WPM',
+    '550 WPM',
+    '600 WPM',
+    '650 WPM',
+    '700 WPM',
+    '750 WPM',
+    '800 WPM'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -672,7 +696,8 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
                               await changeTextTest(list[i]);
                               // ignore: unnecessary_statements
                               (await new Future.delayed(
-                                  const Duration(milliseconds: 500)));
+                                  Duration(milliseconds: actualWPM)));
+                              //sleep(Duration(milliseconds: 200));
                             } else if (isChanging == false) {
                               print("isChanging");
                               print(rewindSave);
@@ -692,7 +717,31 @@ class UpdateTextState extends State with SingleTickerProviderStateMixin {
                         }
                       },
                     ),
+                    new DropdownButton<String>(
+                      hint: new Text("Select a WPM",
+                          style: TextStyle(fontSize: 25)),
+                      value: wpm == null ? null : wpmList[wpm],
+                      items: wpmList.map((String value) {
+                        return new DropdownMenuItem(
+                          value: value,
+                          child: new Text(
+                            value,
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          wpm = wpmList.indexOf(value);
+                          actualWPM = (int.parse(value.split(" ")[0]));
+                          double temp = (60 / actualWPM) * 1000;
+                          actualWPM = temp.toInt();
+                          print(actualWPM);
+                        });
+                      },
+                    )
                   ])
+
               // IconButton(
               //  iconSize: 50,
               //  icon: AnimatedIcon(
